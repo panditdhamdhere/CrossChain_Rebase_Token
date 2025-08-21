@@ -22,9 +22,7 @@ contract RebaseTokenTest is Test {
     }
 
     function addRewardsToVault(uint256 rewardAmount) public {
-        (bool success, ) = payable(address(vault)).call{value: rewardAmount}(
-            ""
-        );
+        (bool success,) = payable(address(vault)).call{value: rewardAmount}("");
     }
 
     function testDepositLinear(uint256 _amount) public {
@@ -45,11 +43,7 @@ contract RebaseTokenTest is Test {
         uint256 endBalance = rebaseToken.balanceOf(user);
         assertGt(endBalance, middleBalance);
 
-        assertApproxEqAbs(
-            endBalance - middleBalance,
-            middleBalance - startBalance,
-            1
-        );
+        assertApproxEqAbs(endBalance - middleBalance, middleBalance - startBalance, 1);
         vm.stopPrank();
     }
 
@@ -93,5 +87,33 @@ contract RebaseTokenTest is Test {
 
         assertEq(balance, ethBalance);
         assertGt(balance, depositAmount);
+    }
+
+    function testTransfer(uint256 _amount, uint256 _amountToSend) public {
+        _amount = bound(_amount, 1e5 + 1e5, type(uint96).max);
+        _amountToSend = bound(_amountToSend, 1e5, _amount - 1e5);
+
+        vm.deal(user, _amount);
+        vm.prank(user);
+        vault.deposit{value: _amount}();
+
+        address user2 = makeAddr("user2");
+        uint256 userBalance = rebaseToken.balanceOf(user);
+        uint256 user2Balance = rebaseToken.balanceOf(user2);
+        assertEq(userBalance, _amount);
+        assertEq(user2Balance, 0);
+
+        vm.prank(owner);
+        rebaseToken.setInteresRate(4e10);
+
+        vm.prank(user);
+        rebaseToken.transfer(user2, _amountToSend);
+        uint256 userBalanceAfterTransfer = rebaseToken.balanceOf(user);
+        uint256 user2BalanceAfterTransfer = rebaseToken.balanceOf(user2);
+        assertEq(userBalanceAfterTransfer, userBalance - _amountToSend);
+        assertEq(user2BalanceAfterTransfer, _amountToSend);
+
+        assertEq(rebaseToken.getUserInterestRate(user), 5e10);
+        assertEq(rebaseToken.getUserInterestRate(user2), 5e10);
     }
 }
