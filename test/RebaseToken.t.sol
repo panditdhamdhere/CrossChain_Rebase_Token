@@ -22,7 +22,9 @@ contract RebaseTokenTest is Test {
     }
 
     function addRewardsToVault(uint256 rewardAmount) public {
-        (bool success,) = payable(address(vault)).call{value: rewardAmount}("");
+        (bool success, ) = payable(address(vault)).call{value: rewardAmount}(
+            ""
+        );
     }
 
     function testDepositLinear(uint256 _amount) public {
@@ -43,7 +45,11 @@ contract RebaseTokenTest is Test {
         uint256 endBalance = rebaseToken.balanceOf(user);
         assertGt(endBalance, middleBalance);
 
-        assertApproxEqAbs(endBalance - middleBalance, middleBalance - startBalance, 1);
+        assertApproxEqAbs(
+            endBalance - middleBalance,
+            middleBalance - startBalance,
+            1
+        );
         vm.stopPrank();
     }
 
@@ -59,7 +65,10 @@ contract RebaseTokenTest is Test {
         vm.stopPrank();
     }
 
-    function testRedeemAfterTimeHasPassed(uint256 depositAmount, uint256 time) public {
+    function testRedeemAfterTimeHasPassed(
+        uint256 depositAmount,
+        uint256 time
+    ) public {
         time = bound(time, 1000, type(uint96).max); // this is a crazy number of years - 2^96 seconds is a lot
         depositAmount = bound(depositAmount, 1e5, type(uint96).max); // this is an Ether value of max 2^78 which is crazy
 
@@ -115,5 +124,11 @@ contract RebaseTokenTest is Test {
 
         assertEq(rebaseToken.getUserInterestRate(user), 5e10);
         assertEq(rebaseToken.getUserInterestRate(user2), 5e10);
+    }
+
+    function testCannotSetInterestRate (uint256 _newInterestRate) public {
+        vm.prank(user);
+        vm.expectRevert();
+        rebaseToken.setInteresRate(_newInterestRate);
     }
 }
