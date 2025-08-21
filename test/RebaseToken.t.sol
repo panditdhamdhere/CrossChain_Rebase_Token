@@ -147,4 +147,21 @@ contract RebaseTokenTest is Test {
         );
         rebaseToken.burn(user, 100);
     }
+
+    function testGetPrincipleAmount() public {
+        uint256 amount = 1e5;
+        vm.deal(user, amount);
+        vm.prank(user);
+        vault.deposit{value: amount}();
+        uint256 principleAmount = rebaseToken.principleBalanceOf(user);
+        assertEq(principleAmount, amount);
+
+        vm.warp(block.timestamp + 1 days);
+        uint256 principleAmountAfterWarp = rebaseToken.principleBalanceOf(user);
+        assertEq(principleAmountAfterWarp, amount);
+    }
+
+    function testGetRebaseTokenAddress() public view {
+        assertEq(vault.getRebaseTokenAddress(), address(rebaseToken));
+    }
 }
