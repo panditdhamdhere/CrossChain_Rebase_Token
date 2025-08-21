@@ -18,8 +18,13 @@ contract RebaseTokenTest is Test {
         rebaseToken = new RebaseToken();
         vault = new Vault(IRebaseToken(address(rebaseToken)));
         rebaseToken.grantMintAndBurnRole(address(vault));
-        (bool success,) = payable(address(vault)).call{value: 1e18}("");
         vm.stopPrank();
+    }
+
+    function addRewardsToVault(uint256 rewardAmount) public {
+        (bool success, ) = payable(address(vault)).call{value: rewardAmount}(
+            ""
+        );
     }
 
     function testDepositLinear(uint256 _amount) public {
@@ -40,7 +45,53 @@ contract RebaseTokenTest is Test {
         uint256 endBalance = rebaseToken.balanceOf(user);
         assertGt(endBalance, middleBalance);
 
-        assertApproxEqAbs(endBalance - middleBalance, middleBalance - startBalance, 1);
+        assertApproxEqAbs(
+            endBalance - middleBalance,
+            middleBalance - startBalance,
+            1
+        );
         vm.stopPrank();
+    }
+
+    function testRedeemStraightAway(uint256 _amount) public {
+        _amount = bound(_amount, 1e5, type(uint96).max);
+        vm.startPrank(user);
+        vm.deal(user, _amount);
+        vault.deposit{value: _amount}();
+        assertEq(rebaseToken.balanceOf(user), _amount);
+        vault.redeem(type(uint256).max);
+        assertEq(rebaseToken.balanceOf(user), 0);
+        assertEq(address(user).balance, _amount);
+        vm.stopPrank();
+    }
+
+    function testRedeemAfterTimeHasPassed(uint256 depositAmount, uint256 time) public {
+        time = bound(time, 1000, type(uint96).max); // this is a crazy number of years - 2^96 seconds is a lot
+        depositAmount = bound(depositAmount, 1e5, type(uint96).max); // this is an Ether value of max 2^78 which is crazy
+
+        // Deposit funds
+        vm.deal(user, depositAmount);
+        vm.prank(user);
+        vault.deposit{value: depositAmount}();
+
+        // check the balance has increased after some time has passed
+        vm.warp(time);
+
+        // Get balance after time has passed
+        uint256 balance = rebaseToken.balanceOf(user);
+
+        // Add rewards to the vault
+        vm.deal(owner, balance - depositAmount);
+        vm.prank(owner);
+        addRewardsToVault(balance - depositAmount);
+
+        // Redeem funds
+        vm.prank(user);
+        vault.redeem(balance);
+
+        uint256 ethBalance = address(user).balance;
+
+        assertEq(balance, ethBalance);
+        assertGt(balance, depositAmount);
     }
 }
