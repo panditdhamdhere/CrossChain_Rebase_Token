@@ -28,7 +28,7 @@ contract Vault {
         }
 
         i_rebaseToken.burn(msg.sender, _amount);
-        (bool success,) = payable(msg.sender).call{value: _amount}("");
+        (bool success, ) = payable(msg.sender).call{value: _amount}("");
         if (!success) {
             revert Vault__RedeemedFailed();
         }
