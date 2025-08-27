@@ -1,7 +1,13 @@
 @openzeppelin/=lib/openzeppelin-contracts/
 @ccip/=lib/ccip/
 @chainlink-local/=lib/chainlink-local/
-ccip/=lib/ccip/
+@chainlink/contracts-ccip/=lib/chainlink-local/lib/chainlink-ccip/chains/evm/
+@chainlink/contracts/=lib/chainlink-local/lib/chainlink-evm/contracts/
+@chainlink/local/src/=lib/chainlink-local/src/
+ccip/=lib/ccip/contracts/
+chainlink-ccip/=lib/chainlink-local/lib/chainlink-ccip/
+chainlink-evm/=lib/chainlink-local/lib/chainlink-evm/
+chainlink-local/=lib/chainlink-local/src/
 ds-test/=lib/openzeppelin-contracts/lib/forge-std/lib/ds-test/src/
 erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/
 forge-std/=lib/forge-std/src/
